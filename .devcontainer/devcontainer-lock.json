@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/prulloac/devcontainer-features/ollama:1.0.1": {
+      "version": "1.0.1",
+      "resolved": "ghcr.io/prulloac/devcontainer-features/ollama@sha256:0a4b90bd26bd2d6744a3a7080769f0d15ff379918aaa15aba1f93901ac085062",
+      "integrity": "sha256:0a4b90bd26bd2d6744a3a7080769f0d15ff379918aaa15aba1f93901ac085062"
+    }
+  }
+}
