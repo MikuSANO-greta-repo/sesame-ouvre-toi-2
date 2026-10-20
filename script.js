@@ -16,9 +16,10 @@ const producs = menu.map((product) => {
 });
 const orderPrompt = `
 You are an ordering assistant for **Sésame**. 
-When you accept orders, return the product id, product name and the quantity. 
+When you accept orders, return the id and the quantity.
+Use "id" and "quantity" for the response. 
 Here is the list of products: ${JSON.stringify(producs)}.
-If you can't find the product from the given message, say so. 
+If you can't find the product from the given message, let it go. 
 `;
 
 const orderForm = document.querySelector("#ai-order-form");
@@ -44,6 +45,20 @@ async function askModel(conversation) {
       messages: conversation,
       think: false,
       stream: false,
+      format: {
+        type: "object",
+        properties: {
+          lines: {
+            type: "array",
+            items: {
+              type: "object",
+              id: { type: "number" },
+              quantity: { type: "number" },
+            },
+          },
+        },
+        required: ["id", "quantity"],
+      },
     }),
   });
 
@@ -68,9 +83,10 @@ async function sendMessage(text) {
   });
 
   try {
-    const answer = await askModel(messages);
+    const response = await askModel(messages);
+    messages.push({ role: "assistant", content: response });
+    const answer = JSON.parse(response);
     console.log("answer from ai: ", answer);
-    messages.push({ role: "assistant", content: answer });
   } catch (error) {
     console.error(error);
   }
