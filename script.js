@@ -4,9 +4,35 @@
 // ============================================================
 // L'IA du comptoir. Ton code, une section par étape.
 // ============================================================
+const OLLAMA_URL = "http://localhost:11434/api/chat";
+const MODEL_NAME = "qwen3.5:4b";
 
 // Étape 1 · Parler à Qwen
+/*
+As a preparation, 
+1, check weather model is ready to run `ollama list`
+2, if there isn't a model which you'd like to use in the list, `ollama pull <nameOfTheModel:tag>`
+*/
+async function askModel(conversation) {
+  const response = await fetch(OLLAMA_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MODEL_NAME,
+      messages: conversation,
+      think: false,
+      stream: false,
+    }),
+  });
 
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error);
+  }
+
+  return data.message.content;
+}
 
 // Étape 2 · La carte dans le prompt système
 
