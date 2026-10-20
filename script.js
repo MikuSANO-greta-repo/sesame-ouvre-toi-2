@@ -6,6 +6,28 @@
 // ============================================================
 const OLLAMA_URL = "http://localhost:11434/api/chat";
 const MODEL_NAME = "qwen3.5:4b";
+const messages = [];
+
+const producs = menu.map((product) => {
+  const productInfo = {};
+  productInfo.id = product.id;
+  productInfo.name = product.name;
+  return productInfo;
+});
+const orderPrompt = `
+You are an ordering assistant for **Sésame**. 
+When you accept orders, return the product id, product name and the quantity. 
+Here is the list of products: ${JSON.stringify(producs)}.
+If you can't find the product from the given message, say so. 
+`;
+
+const orderForm = document.querySelector("#ai-order-form");
+const orderInput = document.querySelector("#ai-order-input");
+
+function startConversation() {
+  messages.length = 0;
+  messages.push({ role: "system", content: orderPrompt });
+}
 
 // Étape 1 · Parler à Qwen
 /*
@@ -35,7 +57,31 @@ async function askModel(conversation) {
 }
 
 // Étape 2 · La carte dans le prompt système
+async function sendMessage(text) {
+  if (!text.trim()) {
+    return;
+  }
 
+  messages.push({
+    role: "user",
+    content: text,
+  });
+
+  try {
+    const answer = await askModel(messages);
+    console.log("answer from ai: ", answer);
+    messages.push({ role: "assistant", content: answer });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+orderForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const orderingMessage = `Here is the order: ${orderInput.value}`;
+
+  sendMessage(orderingMessage);
+});
 
 // Étape 3 · Une réponse en JSON
 
@@ -61,3 +107,5 @@ async function askModel(conversation) {
 // Premier affichage
 renderMenu("all");
 renderTicket();
+
+startConversation();
