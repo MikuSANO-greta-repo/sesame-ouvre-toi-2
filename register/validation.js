@@ -1,6 +1,7 @@
 function validateOrder(order, messageElement) {
   const message = [];
-  const validatedOrder = [];
+  const validatedOrder = {};
+  const validatedLines = [];
 
   order.lines.forEach((line) => {
     const product = menu.find((product) => product.id === line.id);
@@ -17,9 +18,12 @@ function validateOrder(order, messageElement) {
     ) {
       message.push(`La quantité de ${product.name} dépasse 10.`);
     } else {
-      validatedOrder.push(line);
+      validatedLines.push(line);
     }
   });
+
+  validatedOrder.customer = order.customer ? order.customer : "";
+  validatedOrder.lines = validatedLines; 
 
   messageElement.textContent = message.join(" ");
   return validatedOrder;

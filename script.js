@@ -16,9 +16,14 @@ const producs = menu.map((product) => {
 });
 const orderPrompt = `
 You are an ordering assistant for **Sésame**. 
-When you accept orders, return **id** and **quantity** from the list.
+When you accept orders, return "id" and "quantity" from the list.
+
 Here is the list of products: ${JSON.stringify(producs)}.
-When you can't find the product **return null as value** both id and quantity.`;
+When you can't find the product **return null** both id and quantity.
+
+If the order contains "pour", a person's name comes after. 
+Return that value as “customer.”
+If it does not contain a person's name, return an empty string.`;
 
 const orderEmptyMessage = "Veuillez saisir une chaîne de caractères.";
 
@@ -27,7 +32,7 @@ const orderInput = document.querySelector("#ai-order-input");
 const orderButton = document.querySelector(".ai-box .field-row button");
 const orderMessage = document.querySelector("#ai-order-message");
 
-function startConversation() {
+function resetConversation() {
   messages.length = 0;
   messages.push({ role: "system", content: orderPrompt });
 }
@@ -50,6 +55,7 @@ async function askModel(conversation) {
       format: {
         type: "object",
         properties: {
+          customer: { type: "string" },
           lines: {
             type: "array",
             items: {
@@ -59,7 +65,7 @@ async function askModel(conversation) {
             },
           },
         },
-        required: ["id", "quantity"],
+        required: ["customer", "id", "quantity"],
       },
       options: {
         temperature: 0,
@@ -79,6 +85,7 @@ async function askModel(conversation) {
 // Étape 2 · La carte dans le prompt système
 async function sendMessage(text) {
   orderMessage.textContent = "";
+  orderMessage.classList?.remove("is-error");
 
   if (!text.trim()) return;
 
@@ -95,16 +102,16 @@ async function sendMessage(text) {
     messages.push({ role: "assistant", content: response });
     const answer = JSON.parse(response);
 
-    const validtedOrder = validateOrder(answer, orderMessage);
+    const validatedOrder = validateOrder(answer, orderMessage);
 
-    if (validtedOrder.length === 0) {
+    if (validatedOrder.lines.length === 0) {
       throw new Error(
         "Nous n'avons pas trouvé le produit que vous recherchez.",
       );
-    }
+    } else {
+      order.customer = validatedOrder.customer;
 
-    if (validtedOrder.length > 0) {
-      validtedOrder.forEach((line) => {
+      validatedOrder.lines.forEach((line) => {
         const orderdProduct = menu.find((product) => product.id === line.id);
         let counter = 0;
         while (counter < line.quantity) {
@@ -115,8 +122,11 @@ async function sendMessage(text) {
       renderTicket();
     }
   } catch (error) {
-    orderMessage.textContent = `Oups : ${error.message} (le détail est dans la console, F12)`;
+    orderMessage.textContent = `Oups : L'IA ne répond pas : prends la commande à la main. (le détail est dans la console, F12)`;
     console.error(error);
+
+    orderMessage.classList.add("is-error");
+    resetConversation();
   }
 
   orderButton.removeAttribute("disabled");
@@ -160,4 +170,4 @@ orderForm.addEventListener("submit", (e) => {
 renderMenu("all");
 renderTicket();
 
-startConversation();
+resetConversation();
