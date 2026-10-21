@@ -4,16 +4,8 @@
 // ============================================================
 // L'IA du comptoir. Ton code, une section par étape.
 // ============================================================
-const OLLAMA_URL = "http://localhost:11434/api/chat";
-const MODEL_NAME = "qwen3.5:4b";
-const messages = [];
+const messagesForOrder = [];
 
-const producs = menu.map((product) => {
-  const productInfo = {};
-  productInfo.id = product.id;
-  productInfo.name = product.name;
-  return productInfo;
-});
 const orderPrompt = `
 You are an ordering assistant for **Sésame**. 
 When you accept orders, return "id" and "quantity" from the list.
@@ -25,16 +17,14 @@ If the order contains "pour", a person's name comes after.
 Return that value as “customer.”
 If it does not contain a person's name, return an empty string.`;
 
-const orderEmptyMessage = "Veuillez saisir une chaîne de caractères.";
-
 const orderForm = document.querySelector("#ai-order-form");
 const orderInput = document.querySelector("#ai-order-input");
-const orderButton = document.querySelector(".ai-box .field-row button");
+const orderButton = document.querySelector("#ai-order-button");
 const orderMessage = document.querySelector("#ai-order-message");
 
-function resetConversation() {
-  messages.length = 0;
-  messages.push({ role: "system", content: orderPrompt });
+function resetOrderConversation() {
+  messagesForOrder.length = 0;
+  messagesForOrder.push({ role: "system", content: orderPrompt });
 }
 
 // Étape 1 · Parler à Qwen
@@ -43,7 +33,7 @@ As a preparation,
 1, check weather model is ready to run `ollama list`
 2, if there isn't a model which you'd like to use in the list, `ollama pull <nameOfTheModel:tag>`
 */
-async function askModel(conversation) {
+async function askModelForOrder(conversation) {
   const response = await fetch(OLLAMA_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -83,13 +73,13 @@ async function askModel(conversation) {
 }
 
 // Étape 2 · La carte dans le prompt système
-async function sendMessage(text) {
+async function sendMessageForOrder(text) {
   orderMessage.textContent = "";
   orderMessage.classList?.remove("is-error");
 
   if (!text.trim()) return;
 
-  messages.push({
+  messagesForOrder.push({
     role: "user",
     content: text,
   });
@@ -98,8 +88,8 @@ async function sendMessage(text) {
   orderButton.setAttribute("disabled", "disabled");
 
   try {
-    const response = await askModel(messages);
-    messages.push({ role: "assistant", content: response });
+    const response = await askModelForOrder(messagesForOrder);
+    messagesForOrder.push({ role: "assistant", content: response });
     const answer = JSON.parse(response);
 
     const validatedOrder = validateOrder(answer, orderMessage);
@@ -126,7 +116,7 @@ async function sendMessage(text) {
     console.error(error);
 
     orderMessage.classList.add("is-error");
-    resetConversation();
+    resetOrderConversation();
   }
 
   orderButton.removeAttribute("disabled");
@@ -137,12 +127,12 @@ orderForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
   if (orderInput.value === "") {
-    orderMessage.textContent = orderEmptyMessage;
+    orderMessage.textContent = emptyMessage;
     return;
   }
 
   const orderingMessage = `Order: ${orderInput.value}`;
-  sendMessage(orderingMessage);
+  sendMessageForOrder(orderingMessage);
 });
 
 // Étape 3 · Une réponse en JSON
@@ -170,4 +160,4 @@ orderForm.addEventListener("submit", (e) => {
 renderMenu("all");
 renderTicket();
 
-resetConversation();
+resetOrderConversation();

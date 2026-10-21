@@ -23,8 +23,27 @@ function validateOrder(order, messageElement) {
   });
 
   validatedOrder.customer = order.customer ? order.customer : "";
-  validatedOrder.lines = validatedLines; 
+  validatedOrder.lines = validatedLines;
 
   messageElement.textContent = message.join(" ");
   return validatedOrder;
+}
+
+function validateAdvice(response) {
+  const validatedAdvice = {};
+  const validatedSuggestions = [];
+
+  response.suggestions.forEach((suggestion) => {
+    const product = menu.find((product) => product.id === suggestion.id);
+    if (!product || !product.available) {
+      return;
+    } else {
+      validatedSuggestions.push(suggestion);
+    }
+  });
+
+  validatedAdvice.advice = response.advice ? response.advice : "";
+  validatedAdvice.suggestions = validatedSuggestions;
+
+  return validatedAdvice;
 }

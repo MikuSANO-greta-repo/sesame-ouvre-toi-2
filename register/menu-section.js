@@ -43,6 +43,10 @@ function createProductCard(product) {
     button.disabled = true;
   }
 
+  if (product?.isSuggested === true) {
+    card.classList.add("is-suggested");
+  }
+
   button.addEventListener("click", function () {
     order.add(product);
     renderTicket();

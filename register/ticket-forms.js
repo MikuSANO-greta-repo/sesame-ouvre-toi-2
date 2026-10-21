@@ -60,5 +60,7 @@ checkoutButton.addEventListener("click", function () {
 
   order.reset();
   clearTicketForms();
+  resetAdvice();
   renderTicket();
+  renderMenu("all"); 
 });
