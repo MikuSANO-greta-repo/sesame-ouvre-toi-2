@@ -16,12 +16,10 @@ const producs = menu.map((product) => {
 });
 const orderPrompt = `
 You are an ordering assistant for **Sésame**. 
-When you accept orders, return the id and the quantity.
-Use "id" and "quantity" for the response. 
+When you accept orders, return **id** and **quantity** from the list.
 Here is the list of products: ${JSON.stringify(producs)}.
-If you can't find the product from the given message, return null.`;
+When you can't find the product **return null as value** both id and quantity.`;
 
-const orderErrorMessage = "Il y a une erreur dans le détail de la commande.";
 const orderEmptyMessage = "Veuillez saisir une chaîne de caractères.";
 
 const orderForm = document.querySelector("#ai-order-form");
@@ -63,6 +61,9 @@ async function askModel(conversation) {
         },
         required: ["id", "quantity"],
       },
+      options: {
+        temperature: 0,
+      },
     }),
   });
 
@@ -94,14 +95,16 @@ async function sendMessage(text) {
     messages.push({ role: "assistant", content: response });
     const answer = JSON.parse(response);
 
-    if (answer.lines.length === 0) {
-      orderMessage.textContent = orderErrorMessage;
-    } else if (
-      answer.lines.some((line) => line.id === null || line.quantity === null)
-    ) {
-      orderMessage.textContent = orderErrorMessage;
-    } else {
-      answer.lines.forEach((line) => {
+    const validtedOrder = validateOrder(answer, orderMessage);
+
+    if (validtedOrder.length === 0) {
+      throw new Error(
+        "Nous n'avons pas trouvé le produit que vous recherchez.",
+      );
+    }
+
+    if (validtedOrder.length > 0) {
+      validtedOrder.forEach((line) => {
         const orderdProduct = menu.find((product) => product.id === line.id);
         let counter = 0;
         while (counter < line.quantity) {
@@ -109,7 +112,6 @@ async function sendMessage(text) {
           counter++;
         }
       });
-      orderMessage.textContent = "";
       renderTicket();
     }
   } catch (error) {
@@ -128,7 +130,7 @@ orderForm.addEventListener("submit", (e) => {
     orderMessage.textContent = orderEmptyMessage;
     return;
   }
-  
+
   const orderingMessage = `Order: ${orderInput.value}`;
   sendMessage(orderingMessage);
 });
